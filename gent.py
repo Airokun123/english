@@ -865,6 +865,7 @@ def render_check():
     
     for i, (location_name, location_data) in enumerate(locations.items()):
         with tabs[i]:
+            # Risk color and background mapping
             risk_color = {
                 "Very Low": "#10B981",  # Green
                 "Low": "#34D399",  # Light Green
@@ -873,24 +874,47 @@ def render_check():
                 "High": "#DC2626"  # Red
             }
             
+            # Background colors for the cards (light colors that contrast with text)
+            bg_color = "#FFFFFF"  # White background for all cards
+            
+            # Text color - ensuring dark text for better readability
+            text_color = "#1F2937"  # Dark gray text for all content
+            
+            # Card with improved contrast and font visibility
             st.markdown(f"""
-            <div style='padding: 20px; background-color: #f8fafc; border-radius: 10px; border-left: 5px solid {risk_color.get(location_data["risk"], "#6B7280")}'>
-                <h3 style='margin-top: 0;'>{location_name}</h3>
-                <p>{location_data["description"]}</p>
-                <p><strong>Gentrification Risk: <span style='color: {risk_color.get(location_data["risk"], "#6B7280")}'>{location_data["risk"]}</span></strong></p>
+            <div style='padding: 20px; background-color: {bg_color}; border-radius: 10px; border-left: 5px solid {risk_color.get(location_data["risk"], "#6B7280")}; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
+                <h3 style='margin-top: 0; color: {text_color}; font-weight: 700;'>{location_name}</h3>
+                <p style='color: {text_color}; font-size: 16px; line-height: 1.6;'>{location_data["description"]}</p>
+                <div style='background-color: #F3F4F6; padding: 10px; border-radius: 5px; margin-top: 15px;'>
+                    <p style='margin: 0; font-weight: 600; color: {text_color};'>
+                        Gentrification Risk: 
+                        <span style='color: {risk_color.get(location_data["risk"], "#6B7280")}; 
+                               background-color: rgba({",".join(map(str, [int(risk_color.get(location_data["risk"], "#6B7280")[1:3], 16), 
+                                                                        int(risk_color.get(location_data["risk"], "#6B7280")[3:5], 16), 
+                                                                        int(risk_color.get(location_data["risk"], "#6B7280")[5:7], 16)]))}, 0.15); 
+                               padding: 3px 8px; 
+                               border-radius: 4px; 
+                               font-weight: 700;'>
+                            {location_data["risk"]}
+                        </span>
+                    </p>
+                </div>
             </div>
             """, unsafe_allow_html=True)
     
-    # Coming soon section
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown("### More Locations Coming Soon")
+    # Coming soon section with improved visibility
     st.markdown("""
-    We're continuously expanding our database to include more locations and more detailed 
-    risk assessments. Check back later for updates!
-    
-    If you'd like to suggest a location for us to analyze, please use the Contact Us feature.
-    """)
-    st.markdown('</div>', unsafe_allow_html=True)
+    <div style='padding: 20px; background-color: #FFFFFF; border-radius: 10px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
+        <h3 style='margin-top: 0; color: #1F2937; font-weight: 700;'>More Locations Coming Soon</h3>
+        <p style='color: #1F2937; font-size: 16px; line-height: 1.6;'>
+            We're continuously expanding our database to include more locations and more detailed 
+            risk assessments. Check back later for updates!
+        </p>
+        <p style='color: #1F2937; font-size: 16px; line-height: 1.6;'>
+            If you'd like to suggest a location for us to analyze, please use the Contact Us feature.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 def render_source():
     st.markdown('<div class="main-header">Sources & References</div>', unsafe_allow_html=True)
