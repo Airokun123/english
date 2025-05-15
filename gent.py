@@ -289,18 +289,18 @@ def navigate_to(page: str) -> None:
         if page not in ['HOME', 'LEARN', 'PLAY', 'DONATE', 'CHECK', 'SOURCE', 'CLOSE']:
             raise ValueError(f"Invalid page: {page}")
         
-        st.session_state.page = page
+    st.session_state.page = page
         
         # Reset relevant session states
-        if page == 'PLAY':
-            st.session_state.completed_scenarios = []
+    if page == 'PLAY':
+        st.session_state.completed_scenarios = []
             st.session_state.current_scenario = None
             st.session_state.scenario_result = None
-        elif page == 'DONATE':
+    elif page == 'DONATE':
             reset_donation()
-        elif page == 'LEARN':
-            st.session_state.learn_progress = 0
-            st.session_state.current_module = 1
+    elif page == 'LEARN':
+        st.session_state.learn_progress = 0
+        st.session_state.current_module = 1
         
         logger.info(f"Navigated to {page}")
         st.rerun()
@@ -336,7 +336,7 @@ def check_scenario_answer(scenario: str, answer: str) -> bool:
         return correct_answers.get(scenario) == answer
     except Exception as e:
         logger.error(f"Error checking scenario answer: {str(e)}")
-        return False
+    return False
 
 # Fixed sidebar navigation
 def render_sidebar():
@@ -456,14 +456,43 @@ def render_learn():
     st.markdown(f'<div class="progress-bar" style="width:{st.session_state.learn_progress}%;"></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Module 1
+    # Module selection buttons
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("Module 1: What is Gentrification?", 
+                    key="module1_btn",
+                    help="Learn about the basic concept of gentrification",
+                    use_container_width=True):
+            st.session_state.current_module = 1
+            st.rerun()
+    
+    with col2:
+        if st.button("Module 2: Who is Impacted?", 
+                    key="module2_btn",
+                    help="Learn about who is affected by gentrification",
+                    use_container_width=True):
+            st.session_state.current_module = 2
+            st.rerun()
+    
+    with col3:
+        if st.button("Module 3: Solutions", 
+                    key="module3_btn",
+                    help="Learn about potential solutions to gentrification",
+                    use_container_width=True):
+            st.session_state.current_module = 3
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Module 1 Content
     if st.session_state.current_module == 1:
         st.markdown('<div class="module-header">Module 1: WHAT IS GENTRIFICATION?</div>', unsafe_allow_html=True)
         
         st.markdown('<div class="card">', unsafe_allow_html=True)
         user_explanation = st.text_area("Try explaining gentrification in your own words:", height=100)
         
-        if st.button("Submit"):
+        if st.button("Submit", key="module1_submit"):
             words = ["process", "wealthy", "displacement", "displaced", "displace", "move out"]
             count = sum(1 for word in words if word in user_explanation.lower())
             
@@ -474,15 +503,11 @@ def render_learn():
             
             st.markdown("""
             **Gentrification** is the displacement of existing low income communities by wealthiest families 
-            or newcomers to the re-developeded area.
+            or newcomers to the re-developed area.
             """)
-            
-            if st.button("Continue to Module 2"):
-                next_module()
-                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Module 2
+    # Module 2 Content
     elif st.session_state.current_module == 2:
         st.markdown('<div class="module-header">Module 2: WHO IS IMPACTED BY GENTRIFICATION? AND HOW?</div>', unsafe_allow_html=True)
         
@@ -494,12 +519,13 @@ def render_learn():
         Eventually, these individuals are pushed out of their homes, often without any solid safety net or support to help them 
         about displacement.
 
-        Often the puts the displaced people in a cycle of poverty and hardships without any proper help.
+        Often this puts the displaced people in a cycle of poverty and hardships without any proper help.
         """)
         
         small_business_impact = st.radio(
             "Do you think small businesses (i.e. a corner store) in low-income communities can also be impacted by gentrification?",
-            ["Select an answer", "Yes", "No"]
+            ["Select an answer", "Yes", "No"],
+            key="module2_radio"
         )
         
         if small_business_impact != "Select an answer":
@@ -508,9 +534,9 @@ def render_learn():
             else:
                 st.error("Incorrect! Gentrification also impacts small businesses. Not just low income residents.")
             
-            business_explanation = st.text_area("How do you think small businesses are impacted?", height=100)
+            business_explanation = st.text_area("How do you think small businesses are impacted?", height=100, key="module2_text")
             
-            if st.button("Submit"):
+            if st.button("Submit", key="module2_submit"):
                 words = ["rent", "higher", "loss", "customers", "less", "badly", "bad"]
                 count = sum(1 for word in words if word in business_explanation.lower())
                 
@@ -524,13 +550,9 @@ def render_learn():
                 (from low income to high income customers. The shop will not be able to cater to the new customer base), 
                 which can lead to displacement or forced closures, even if they have strong local ties in the community.
                 """)
-                
-                if st.button("Continue to Module 3"):
-                    next_module()
-                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Module 3
+    # Module 3 Content
     elif st.session_state.current_module == 3:
         st.markdown('<div class="module-header">Module 3: SOLUTIONS AND ACTIONS MOVING FORWARD</div>', unsafe_allow_html=True)
         
@@ -541,9 +563,9 @@ def render_learn():
         but their efforts rarely stop developers from moving forward with redevelopment.
         """)
         
-        user_ideas = st.text_area("Do you have any ideas on combating gentrification?", height=100)
+        user_ideas = st.text_area("Do you have any ideas on combating gentrification?", height=100, key="module3_text")
         
-        if st.button("Submit"):
+        if st.button("Submit", key="module3_submit"):
             st.success("You have some interesting ideas!")
             
             st.markdown("""
@@ -556,15 +578,21 @@ def render_learn():
             being pushed out by gentrification.
             """)
             
-            if st.button("Complete Learning Module"):
+            if st.button("Complete Learning Module", key="module3_complete"):
                 st.session_state.learn_progress = 100
                 st.success("You've completed all learning modules! Return to the Home page or explore other sections.")
                 
-                # Button to go back to main page
-                if st.button("Return to Home"):
+                if st.button("Return to Home", key="module3_home"):
                     navigate_to('HOME')
-                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Update progress based on completed modules
+    if st.session_state.current_module == 1:
+        st.session_state.learn_progress = 33.33
+    elif st.session_state.current_module == 2:
+        st.session_state.learn_progress = 66.66
+    elif st.session_state.current_module == 3:
+        st.session_state.learn_progress = 100
 
 def render_play():
     st.markdown('<div class="main-header">Test Your Knowledge</div>', unsafe_allow_html=True)
