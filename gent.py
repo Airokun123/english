@@ -451,9 +451,49 @@ def render_home():
 def render_learn():
     st.markdown('<div class="main-header">Learning About Gentrification</div>', unsafe_allow_html=True)
     
-    # Progress bar
+    # Module selection buttons
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("### Select a Learning Module")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("📕 Module 1: What is Gentrification?", 
+                    key="module1_btn", 
+                    use_container_width=True,
+                    help="Learn the basic concept of gentrification"):
+            st.session_state.current_module = 1
+            st.rerun()
+    
+    with col2:
+        if st.button("📗 Module 2: Who is Impacted?", 
+                    key="module2_btn", 
+                    use_container_width=True,
+                    help="Learn about who gentrification affects and how"):
+            st.session_state.current_module = 2
+            st.rerun()
+    
+    with col3:
+        if st.button("📘 Module 3: Solutions & Actions", 
+                    key="module3_btn", 
+                    use_container_width=True,
+                    help="Learn about potential solutions to gentrification"):
+            st.session_state.current_module = 3
+            st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Calculate progress based on which modules are completed
+    if not hasattr(st.session_state, 'completed_modules'):
+        st.session_state.completed_modules = set()
+    
+    # Progress bar (shows which modules have been visited)
+    progress_percent = len(st.session_state.completed_modules) * 33.33
+    if len(st.session_state.completed_modules) == 3:
+        progress_percent = 100
+    
     st.markdown('<div class="progress-container">', unsafe_allow_html=True)
-    st.markdown(f'<div class="progress-bar" style="width:{st.session_state.learn_progress}%;"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="progress-bar" style="width:{progress_percent}%;"></div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Module 1
@@ -477,8 +517,10 @@ def render_learn():
             or newcomers to the re-developeded area.
             """)
             
-            if st.button("Continue to Module 2"):
-                next_module()
+            # Mark this module as completed
+            st.session_state.completed_modules.add(1)
+            
+            if st.button("Return to Module Selection"):
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -525,8 +567,10 @@ def render_learn():
                 which can lead to displacement or forced closures, even if they have strong local ties in the community.
                 """)
                 
-                if st.button("Continue to Module 3"):
-                    next_module()
+                # Mark this module as completed
+                st.session_state.completed_modules.add(2)
+                
+                if st.button("Return to Module Selection"):
                     st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
@@ -556,15 +600,21 @@ def render_learn():
             being pushed out by gentrification.
             """)
             
-            if st.button("Complete Learning Module"):
-                st.session_state.learn_progress = 100
-                st.success("You've completed all learning modules! Return to the Home page or explore other sections.")
-                
-                # Button to go back to main page
-                if st.button("Return to Home"):
-                    navigate_to('HOME')
-                    st.rerun()
+            # Mark this module as completed
+            st.session_state.completed_modules.add(3)
+            
+            # Show completion message if all modules are completed
+            if len(st.session_state.completed_modules) == 3:
+                st.success("🎉 Congratulations! You've completed all learning modules!")
+            
+            if st.button("Return to Module Selection"):
+                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Add a home button at the bottom
+    if st.button("Return to Home", key="learn_home_btn"):
+        navigate_to('HOME')
+        st.rerun()
 
 def render_play():
     st.markdown('<div class="main-header">Test Your Knowledge</div>', unsafe_allow_html=True)
