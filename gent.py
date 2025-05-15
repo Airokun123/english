@@ -1,127 +1,265 @@
 import streamlit as st
 import time
 import base64
+from typing import Dict, List, Optional
+import json
+from pathlib import Path
+import logging
+from datetime import datetime
 
-# Set page configuration
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Constants
+THEME = {
+    'light': {
+        'primary': '#1E3A8A',
+        'secondary': '#3B82F6',
+        'background': '#F0F9FF',
+        'text': '#1F2937',
+        'success': '#047857',
+        'error': '#DC2626',
+        'warning': '#F59E0B'
+    },
+    'dark': {
+        'primary': '#60A5FA',
+        'secondary': '#93C5FD',
+        'background': '#1F2937',
+        'text': '#F9FAFB',
+        'success': '#34D399',
+        'error': '#EF4444',
+        'warning': '#FBBF24'
+    }
+}
+
+# Set page configuration with improved metadata
 st.set_page_config(
     page_title="Gentrification Awareness App",
     page_icon="🏙️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://github.com/yourusername/gentrification-app',
+        'Report a bug': 'https://github.com/yourusername/gentrification-app/issues',
+        'About': '''
+        # Gentrification Awareness App
+        This app helps educate about gentrification, its impacts, and potential solutions.
+        Built with Streamlit and ❤️ for community awareness.
+        '''
+    }
 )
 
-# Custom CSS for styling
+# Fixed CSS with proper structure and no duplicates
 st.markdown("""
 <style>
+    /* Base styles with dark mode support */
+    :root {
+        --primary-color: #1E3A8A;
+        --secondary-color: #3B82F6;
+        --background-color: #F0F9FF;
+        --text-color: #1F2937;
+        --success-color: #047857;
+        --error-color: #DC2626;
+        --warning-color: #F59E0B;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --primary-color: #60A5FA;
+            --secondary-color: #93C5FD;
+            --background-color: #1F2937;
+            --text-color: #F9FAFB;
+            --success-color: #34D399;
+            --error-color: #EF4444;
+            --warning-color: #FBBF24;
+        }
+    }
+
+    /* Typography and base styles */
+    * {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.5;
+    }
+
+    /* Headers */
     .main-header {
-        font-size: 42px;
-        font-weight: bold;
-        color: #1E3A8A;
+        font-size: clamp(2rem, 5vw, 2.625rem);
+        font-weight: 800;
+        color: var(--primary-color);
         text-align: center;
-        margin-bottom: 20px;
-        padding: 20px;
-        background-color: #F0F9FF;
-        border-radius: 10px;
-    }
-    .module-header {
-        font-size: 28px;
-        font-weight: bold;
-        color: #1E3A8A;
-        margin-top: 20px;
-        margin-bottom: 15px;
-        padding: 10px;
-        background-color: #DBEAFE;
-        border-radius: 5px;
-    }
-    .sub-header {
-        font-size: 24px;
-        font-weight: bold;
-        color: #1E40AF;
-        margin-top: 15px;
-        margin-bottom: 10px;
-    }
-    .card {
-        padding: 20px;
-        border-radius: 10px;
-        background-color: #F0F9FF;
-        margin-bottom: 20px;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        background-color: var(--background-color);
+        border-radius: 1rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
+    .module-header {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 1.25rem 0 1rem;
+        padding: 0.75rem;
+        background-color: var(--background-color);
+        border-radius: 0.5rem;
+    }
+
+    .sub-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin: 1rem 0 0.75rem;
+    }
+
+    /* Cards */
+    .card {
+        padding: 1.5rem;
+        border-radius: 1rem;
+        background-color: var(--background-color);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
     .scenario-card {
-        padding: 20px;
-        border-radius: 10px;
-        background-color: #EFF6FF;
-        margin-bottom: 20px;
-        border-left: 5px solid #3B82F6;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        background-color: var(--background-color);
+        margin-bottom: 1.5rem;
+        border-left: 0.5rem solid var(--secondary-color);
     }
+
     .donate-card {
-        padding: 20px;
-        border-radius: 10px;
-        background-color: #ECFDF5;
-        margin-bottom: 20px;
-        border-left: 5px solid #10B981;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        background-color: var(--background-color);
+        margin-bottom: 1.5rem;
+        border-left: 0.5rem solid var(--success-color);
     }
+
     .location-card {
-        padding: 15px;
-        border-radius: 8px;
-        background-color: #F0F9FF;
-        margin-bottom: 15px;
-        border-left: 5px solid #0EA5E9;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        background-color: var(--background-color);
+        margin-bottom: 1.25rem;
+        border-left: 0.5rem solid var(--secondary-color);
     }
-    .source-item {
-        margin-bottom: 10px;
-        padding: 10px;
-        background-color: #F3F4F6;
-        border-radius: 5px;
-    }
-    .correct-answer {
-        color: #047857;
-        font-weight: bold;
-    }
-    .wrong-answer {
-        color: #DC2626;
-        font-weight: bold;
-    }
-    .highlight-text {
-        background-color: #FEF3C7;
-        padding: 2px 5px;
-        border-radius: 3px;
-    }
+
+    /* Interactive elements */
     .button-primary {
-        background-color: #2563EB;
+        background-color: var(--primary-color);
         color: white;
-        border-radius: 5px;
-        padding: 10px 15px;
-        font-weight: bold;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
+
+    .button-primary:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-1px);
+    }
+
     .button-success {
-        background-color: #10B981;
+        background-color: var(--success-color);
         color: white;
-        border-radius: 5px;
-        padding: 10px 15px;
-        font-weight: bold;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
+
     .button-warning {
-        background-color: #F59E0B;
+        background-color: var(--warning-color);
         color: white;
-        border-radius: 5px;
-        padding: 10px 15px;
-        font-weight: bold;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
-    .main-content {
-        max-width: 1200px;
-        margin: 0 auto;
-    }
+
+    /* Progress and status indicators */
     .progress-container {
         width: 100%;
-        background-color: #E5E7EB;
-        border-radius: 10px;
-        margin-bottom: 20px;
+        background-color: var(--background-color);
+        border-radius: 1rem;
+        margin: 1.5rem 0;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
     .progress-bar {
-        height: 10px;
-        border-radius: 10px;
-        background-color: #3B82F6;
+        height: 0.75rem;
+        border-radius: 1rem;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        transition: width 0.5s ease-in-out;
+    }
+
+    /* Status messages */
+    .correct-answer {
+        color: var(--success-color);
+        font-weight: 600;
+    }
+
+    .wrong-answer {
+        color: var(--error-color);
+        font-weight: 600;
+    }
+
+    .highlight-text {
+        background-color: var(--warning-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        color: var(--text-color);
+    }
+
+    /* Form elements */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea {
+        border-radius: 0.5rem;
+        border: 2px solid var(--background-color);
+        padding: 0.75rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .stTextInput > div > div > input:focus,
+    .stTextArea > div > div > textarea:focus {
+        border-color: var(--primary-color);
+        outline: none;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .main-header {
+            font-size: 1.75rem;
+            padding: 1rem;
+        }
+        
+        .module-header {
+            font-size: 1.5rem;
+        }
+        
+        .card {
+            padding: 1rem;
+        }
+        
+        .button-primary,
+        .button-success,
+        .button-warning {
+            padding: 0.5rem 0.75rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -144,19 +282,31 @@ if 'current_module' not in st.session_state:
 if 'scenario_result' not in st.session_state:
     st.session_state.scenario_result = None
 
-# Helper functions
-def navigate_to(page):
-    st.session_state.page = page
-    # Reset relevant session states when navigating
-    if page == 'PLAY':
-        st.session_state.completed_scenarios = []
-    elif page == 'DONATE':
-        st.session_state.donation_info = {'name': '', 'phone': '', 'email': '', 'bank': '', 'amount': ''}
-        st.session_state.confirm_donation = False
-        st.session_state.donation_successful = False
-    elif page == 'LEARN':
-        st.session_state.learn_progress = 0
-        st.session_state.current_module = 1
+# Fixed navigation function with proper error handling
+def navigate_to(page: str) -> None:
+    """Navigate to a different page with proper state management"""
+    try:
+        if page not in ['HOME', 'LEARN', 'PLAY', 'DONATE', 'CHECK', 'SOURCE', 'CLOSE']:
+            raise ValueError(f"Invalid page: {page}")
+        
+        st.session_state.page = page
+        
+        # Reset relevant session states
+        if page == 'PLAY':
+            st.session_state.completed_scenarios = []
+            st.session_state.current_scenario = None
+            st.session_state.scenario_result = None
+        elif page == 'DONATE':
+            reset_donation()
+        elif page == 'LEARN':
+            st.session_state.learn_progress = 0
+            st.session_state.current_module = 1
+        
+        logger.info(f"Navigated to {page}")
+        st.rerun()
+    except Exception as e:
+        logger.error(f"Navigation error: {str(e)}")
+        st.error("An error occurred during navigation. Please try again.")
 
 def reset_donation():
     st.session_state.donation_info = {'name': '', 'phone': '', 'email': '', 'bank': '', 'amount': ''}
@@ -170,14 +320,63 @@ def next_module():
     else:
         st.session_state.learn_progress = 100
 
-def check_scenario_answer(scenario, answer):
-    if scenario == "A" and answer == "C":
-        return True
-    elif scenario == "B" and answer == "A":
-        return True
-    elif scenario == "C" and answer == "B":
-        return True
-    return False
+# Fixed scenario answer checking
+def check_scenario_answer(scenario: str, answer: str) -> bool:
+    """Check if the answer is correct for a given scenario"""
+    try:
+        if not scenario or not answer:
+            raise ValueError("Scenario and answer must be provided")
+        
+        correct_answers = {
+            "A": "C",
+            "B": "A",
+            "C": "B"
+        }
+        
+        return correct_answers.get(scenario) == answer
+    except Exception as e:
+        logger.error(f"Error checking scenario answer: {str(e)}")
+        return False
+
+# Fixed sidebar navigation
+def render_sidebar():
+    """Render the sidebar with proper navigation"""
+    with st.sidebar:
+        # Logo with proper alt text
+        st.image(
+            "https://via.placeholder.com/150x150.png?text=Gentrification+App",
+            width=150,
+            caption="Gentrification Awareness App Logo"
+        )
+        
+        st.markdown("### Navigation")
+        
+        # Navigation items with proper keys and tooltips
+        nav_items = [
+            ("🏠 Home", "home_nav", "HOME", "Return to the main page"),
+            ("📚 Learn", "learn_nav", "LEARN", "Start learning about gentrification"),
+            ("🎮 Play", "play_nav", "PLAY", "Test your knowledge with scenarios"),
+            ("💰 Donate", "donate_nav", "DONATE", "Support affordable housing initiatives"),
+            ("🔍 Check Your Area", "check_nav", "CHECK", "Check gentrification risk in your area"),
+            ("📋 Sources", "source_nav", "SOURCE", "View sources and references"),
+            ("❌ Close App", "close_nav", "CLOSE", "Exit the application")
+        ]
+        
+        for label, key, page, tooltip in nav_items:
+            if st.button(
+                label,
+                key=key,
+                help=tooltip,
+                use_container_width=True
+            ):
+                navigate_to(page)
+        
+        st.markdown("---")
+        st.markdown("### About")
+        st.markdown("""
+        This app is designed to educate about gentrification, its impacts, and potential solutions.
+        Built with ❤️ for community awareness.
+        """)
 
 # Sidebar Navigation
 with st.sidebar:
@@ -280,7 +479,7 @@ def render_learn():
             
             if st.button("Continue to Module 2"):
                 next_module()
-                st.script_runner.rerun()
+                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Module 2
@@ -328,7 +527,7 @@ def render_learn():
                 
                 if st.button("Continue to Module 3"):
                     next_module()
-                    st.script_runner.rerun()
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Module 3
@@ -364,7 +563,7 @@ def render_learn():
                 # Button to go back to main page
                 if st.button("Return to Home"):
                     navigate_to('HOME')
-                    st.script_runner.rerun()
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 def render_play():
@@ -390,10 +589,10 @@ def render_play():
         st.success("🎉 Congratulations! You've completed all scenarios!")
         if st.button("Play Again"):
             st.session_state.completed_scenarios = []
-            st.script_runner.rerun()
+            st.rerun()
         if st.button("Return to Home"):
             navigate_to('HOME')
-            st.script_runner.rerun()
+            st.rerun()
         return
     
     # Scenario selection
@@ -408,7 +607,7 @@ def render_play():
                 if st.button(f"Scenario {scenario}", key=f"scenario_{scenario}"):
                     st.session_state.current_scenario = scenario
                     st.session_state.scenario_result = None
-                    st.script_runner.rerun()
+                    st.rerun()
     else:
         # Display the current scenario
         st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
@@ -456,7 +655,7 @@ def render_play():
                 st.session_state.scenario_result = "correct"
             else:
                 st.session_state.scenario_result = "incorrect"
-            st.script_runner.rerun()
+            st.rerun()
         
         # Show result if available
         if st.session_state.scenario_result == "correct":
@@ -465,14 +664,14 @@ def render_play():
             if st.button("Continue"):
                 st.session_state.current_scenario = None
                 st.session_state.scenario_result = None
-                st.script_runner.rerun()
+                st.rerun()
         elif st.session_state.scenario_result == "incorrect":
             st.error(f"WRONG. The correct answer is {correct_answer}")
             st.session_state.completed_scenarios.append(st.session_state.current_scenario)
             if st.button("Continue"):
                 st.session_state.current_scenario = None
                 st.session_state.scenario_result = None
-                st.script_runner.rerun()
+                st.rerun()
         
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -480,7 +679,7 @@ def render_play():
         if st.button("Back to Scenario Selection"):
             st.session_state.current_scenario = None
             st.session_state.scenario_result = None
-            st.script_runner.rerun()
+            st.rerun()
 
 def render_donate():
     st.markdown('<div class="main-header">Support Affordable Housing</div>', unsafe_allow_html=True)
@@ -492,11 +691,11 @@ def render_donate():
         
         if st.button("Make Another Donation"):
             reset_donation()
-            st.script_runner.rerun()
+            st.rerun()
         
         if st.button("Return to Home"):
             navigate_to('HOME')
-            st.script_runner.rerun()
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         return
     
@@ -541,7 +740,7 @@ def render_donate():
                 st.error("Donation amount must be a number")
             else:
                 st.session_state.confirm_donation = True
-                st.script_runner.rerun()
+                st.rerun()
         
         if not all_fields_filled:
             st.info("Please fill in all fields to proceed")
@@ -565,12 +764,12 @@ def render_donate():
         with col1:
             if st.button("Confirm Donation"):
                 st.session_state.donation_successful = True
-                st.script_runner.rerun()
+                st.rerun()
         
         with col2:
             if st.button("Edit Information"):
                 st.session_state.confirm_donation = False
-                st.script_runner.rerun()
+                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 def render_check():
@@ -694,7 +893,7 @@ def render_close():
     with col1:
         if st.button("Return to Home Page"):
             navigate_to('HOME')
-            st.script_runner.rerun()
+            st.rerun()
     
     with col2:
         if st.button("Exit Application"):
