@@ -280,7 +280,7 @@ def render_learn():
             
             if st.button("Continue to Module 2"):
                 next_module()
-                st.experimental_rerun()
+                st.script_runner.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Module 2
@@ -328,7 +328,7 @@ def render_learn():
                 
                 if st.button("Continue to Module 3"):
                     next_module()
-                    st.experimental_rerun()
+                    st.script_runner.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     
     # Module 3
@@ -364,7 +364,7 @@ def render_learn():
                 # Button to go back to main page
                 if st.button("Return to Home"):
                     navigate_to('HOME')
-                    st.experimental_rerun()
+                    st.script_runner.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 def render_play():
@@ -390,10 +390,10 @@ def render_play():
         st.success("🎉 Congratulations! You've completed all scenarios!")
         if st.button("Play Again"):
             st.session_state.completed_scenarios = []
-            st.experimental_rerun()
+            st.script_runner.rerun()
         if st.button("Return to Home"):
             navigate_to('HOME')
-            st.experimental_rerun()
+            st.script_runner.rerun()
         return
     
     # Scenario selection
@@ -408,7 +408,7 @@ def render_play():
                 if st.button(f"Scenario {scenario}", key=f"scenario_{scenario}"):
                     st.session_state.current_scenario = scenario
                     st.session_state.scenario_result = None
-                    st.experimental_rerun()
+                    st.script_runner.rerun()
     else:
         # Display the current scenario
         st.markdown('<div class="scenario-card">', unsafe_allow_html=True)
@@ -456,7 +456,7 @@ def render_play():
                 st.session_state.scenario_result = "correct"
             else:
                 st.session_state.scenario_result = "incorrect"
-            st.experimental_rerun()
+            st.script_runner.rerun()
         
         # Show result if available
         if st.session_state.scenario_result == "correct":
@@ -465,14 +465,14 @@ def render_play():
             if st.button("Continue"):
                 st.session_state.current_scenario = None
                 st.session_state.scenario_result = None
-                st.experimental_rerun()
+                st.script_runner.rerun()
         elif st.session_state.scenario_result == "incorrect":
             st.error(f"WRONG. The correct answer is {correct_answer}")
             st.session_state.completed_scenarios.append(st.session_state.current_scenario)
             if st.button("Continue"):
                 st.session_state.current_scenario = None
                 st.session_state.scenario_result = None
-                st.experimental_rerun()
+                st.script_runner.rerun()
         
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -480,7 +480,7 @@ def render_play():
         if st.button("Back to Scenario Selection"):
             st.session_state.current_scenario = None
             st.session_state.scenario_result = None
-            st.experimental_rerun()
+            st.script_runner.rerun()
 
 def render_donate():
     st.markdown('<div class="main-header">Support Affordable Housing</div>', unsafe_allow_html=True)
@@ -492,11 +492,11 @@ def render_donate():
         
         if st.button("Make Another Donation"):
             reset_donation()
-            st.experimental_rerun()
+            st.script_runner.rerun()
         
         if st.button("Return to Home"):
             navigate_to('HOME')
-            st.experimental_rerun()
+            st.script_runner.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
         return
     
@@ -541,7 +541,7 @@ def render_donate():
                 st.error("Donation amount must be a number")
             else:
                 st.session_state.confirm_donation = True
-                st.experimental_rerun()
+                st.script_runner.rerun()
         
         if not all_fields_filled:
             st.info("Please fill in all fields to proceed")
@@ -565,12 +565,12 @@ def render_donate():
         with col1:
             if st.button("Confirm Donation"):
                 st.session_state.donation_successful = True
-                st.experimental_rerun()
+                st.script_runner.rerun()
         
         with col2:
             if st.button("Edit Information"):
                 st.session_state.confirm_donation = False
-                st.experimental_rerun()
+                st.script_runner.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 def render_check():
@@ -694,7 +694,7 @@ def render_close():
     with col1:
         if st.button("Return to Home Page"):
             navigate_to('HOME')
-            st.experimental_rerun()
+            st.script_runner.rerun()
     
     with col2:
         if st.button("Exit Application"):
